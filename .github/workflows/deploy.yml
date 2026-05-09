@@ -26,7 +26,7 @@ jobs:
           npm run build
 
       - name: 上传文件到阿里云
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
