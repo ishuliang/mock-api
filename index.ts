@@ -39,7 +39,7 @@ const loadRoutes = async () => {
             const fullPath = path.join(dir, entry.name)
             if (entry.isDirectory()) {
                 files.push(...await collectTsFiles(fullPath))
-            } else if (entry.name.endsWith('.ts')) {
+            } else if (/\.(ts|js)$/.test(entry.name)) {
                 files.push(fullPath)
             }
         }
