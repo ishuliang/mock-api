@@ -25,29 +25,19 @@ jobs:
           npm ci
           npm run build
 
-      - name: 验证 Secrets 是否配置
-        run: |
-          echo "SERVER_IP 已设置: ${{ secrets.SERVER_IP != '' }}"
-          echo "SERVER_USER 已设置: ${{ secrets.SERVER_USER != '' }}"
-          echo "SERVER_PRIVATE_KEY 已设置: ${{ secrets.SERVER_PRIVATE_KEY != '' }}"
-
-      - name: 配置 SSH 私钥
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+      - name: 安裃 sshpass
+        run: sudo apt-get install -y sshpass
 
       - name: 上传文件到阿里云
         run: |
-          scp -r -P 22 dist/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/mock-api/
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -r -P 22 -o StrictHostKeyChecking=no dist/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/mock-api/
 
       - name: 安装依赖（依赖变化时）& 重启服务
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_PRIVATE_KEY }}
+          password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd ~/mock-api/dist
             NEW_HASH=$(md5sum package-lock.json | awk '{print $1}')
