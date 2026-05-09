@@ -25,6 +25,12 @@ jobs:
           npm ci
           npm run build
 
+      - name: 验证 Secrets 是否配置
+        run: |
+          echo "SERVER_IP 已设置: ${{ secrets.SERVER_IP != '' }}"
+          echo "SERVER_USER 已设置: ${{ secrets.SERVER_USER != '' }}"
+          echo "SERVER_PRIVATE_KEY 已设置: ${{ secrets.SERVER_PRIVATE_KEY != '' }}"
+
       - name: 配置 SSH 私钥
         run: |
           mkdir -p ~/.ssh
