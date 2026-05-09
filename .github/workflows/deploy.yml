@@ -31,7 +31,7 @@ jobs:
 
       - name: 上传文件到阿里云
         run: |
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -r -P 22 -o StrictHostKeyChecking=no dist/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/mock-api/
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -r -P 22 -o StrictHostKeyChecking=no dist/. ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/mock-api/
 
       - name: 安装依赖（依赖变化时）& 重启服务
         uses: appleboy/ssh-action@v1
@@ -40,7 +40,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd ~/mock-api/dist
+            cd ~/mock-api
             NEW_HASH=$(md5sum package-lock.json | awk '{print $1}')
             OLD_HASH=$(cat .lock_hash 2>/dev/null || echo "")
             if [ "$NEW_HASH" != "$OLD_HASH" ]; then
@@ -50,5 +50,4 @@ jobs:
             else
               echo "依赖无变化，跳过安装"
             fi
-            cd ~/mock-api
-            pm2 restart mock-api || pm2 start dist/index.js --name mock-api
+            pm2 restart mock-api || pm2 start index.js --name mock-api
