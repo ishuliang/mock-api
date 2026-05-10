@@ -6,6 +6,24 @@ export default {
     handler: (req: Request, res: Response) => {
         const tranCode = req.body?.Request?.Head?.TranCode
 
+        if (tranCode === 'HTE0104') {
+            res.json({
+                Response: {
+                    Body: { ret: 'T', msg: '' },
+                    Head: {
+                        AckCode: '100.2',
+                        AckMessage: '成功',
+                        ContentType: 'text/json',
+                        IpAddress: '192.168.99.71',
+                        MessageId: 'EADBBBEDEC9149489DBB9130F7647999',
+                        Timestamp: '2026-05-08 19:43:49.389',
+                        Version: '1.1'
+                    }
+                }
+            })
+            return
+        }
+
         if (tranCode !== 'HTE0103') {
             res.status(400).json({
                 Response: {
