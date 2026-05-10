@@ -4,7 +4,7 @@ import { join } from 'path'
 
 const getVersionInfo = (): { version: string; buildTime: string } => {
     try {
-        const versionFile = join(import.meta.dirname, 'version.json')
+        const versionFile = join(import.meta.dirname, '..', 'version.json')
         return JSON.parse(readFileSync(versionFile, 'utf-8'))
     } catch {
         return { version: 'unknown', buildTime: 'unknown' }
