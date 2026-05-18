@@ -34,7 +34,7 @@ export default {
             return
         }
 
-        if (tranCode === 'ORD0304') {
+        if (tranCode === 'ORD0304' || tranCode === 'ORD0301') {
             res.json({
                 Response: {
                     Head: {
