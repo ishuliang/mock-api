@@ -34,6 +34,22 @@ export default {
             return
         }
 
+        if (tranCode === 'ORD0304') {
+            res.json({
+                Response: {
+                    Head: {
+                        AckCode: '100.2',
+                        AckMessage: '平台接收成功！',
+                        Version: '1.1',
+                        ContentType: 'text/json',
+                        ServiceVersion: '1.1'
+                    },
+                    Body: {}
+                }
+            })
+            return
+        }
+
         if (tranCode === 'HTE0104') {
             res.json({
                 Response: {
