@@ -4,8 +4,20 @@ const allCategoriesValue = 'all';
 const state = {
   categories: [],
   routes: [],
+  logs: [],
   selectedId: null,
 };
+
+const beijingTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: 'Asia/Shanghai',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+});
 
 const routeList = document.querySelector('#route-list');
 const logList = document.querySelector('#log-list');
@@ -104,6 +116,7 @@ document.querySelector('#delete-route').addEventListener('click', async (event) 
 document.querySelector('#refresh-routes').addEventListener('click', loadData);
 categoryToolsSelect.addEventListener('change', () => {
   renderRoutes();
+  renderLogs(state.logs);
   const selected = visibleRoutes().find((route) => route.id === state.selectedId);
   if (!selected) selectFirstRoute();
 });
@@ -136,8 +149,8 @@ async function loadData() {
 }
 
 async function loadLogs() {
-  const logs = await requestJson('/api/admin/logs');
-  renderLogs(logs);
+  state.logs = await requestJson('/api/admin/logs');
+  renderLogs(state.logs);
 }
 
 function renderCategoryOptions() {
@@ -189,6 +202,7 @@ function renderRoutes() {
   }
 
   if (!state.selectedId) selectFirstRoute();
+  renderLogs(state.logs);
 }
 
 function renderRouteItem(route) {
@@ -217,12 +231,13 @@ function renderRouteItem(route) {
 
 function renderLogs(logs) {
   logList.innerHTML = '';
-  if (logs.length === 0) {
-    logList.innerHTML = '<p class="hint">暂无请求日志</p>';
+  const visibleLogs = filterLogs(logs);
+  if (visibleLogs.length === 0) {
+    logList.innerHTML = '<p class="hint">暂无匹配当前接口筛选的请求日志</p>';
     return;
   }
 
-  for (const log of logs) {
+  for (const log of visibleLogs) {
     const item = document.createElement('div');
     item.className = 'log-item';
     const statusClass = Number(log.status) >= 400 ? 'error' : 'ok';
@@ -231,11 +246,29 @@ function renderLogs(logs) {
         <strong>${escapeHtml(log.method)} ${escapeHtml(log.path)}</strong>
         <span class="status ${statusClass}">${escapeHtml(String(log.status))}</span>
       </div>
-      <div class="log-meta">${escapeHtml(log.duration_ms)}ms · ${escapeHtml(log.created_at)}</div>
+      <div class="log-meta">${escapeHtml(log.duration_ms)}ms · ${escapeHtml(formatBeijingTime(log.created_at))}</div>
       <pre>${escapeHtml(log.response_preview || '')}</pre>
     `;
     logList.appendChild(item);
   }
+}
+
+function filterLogs(logs) {
+  if (!selectedFilterCategoryId()) return logs;
+
+  const routeIds = new Set(visibleRoutes().map((route) => route.id));
+  return logs.filter((log) => routeIds.has(log.route_id));
+}
+
+function formatBeijingTime(value) {
+  const text = String(value ?? '').trim();
+  if (!text) return '';
+
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text) ? `${text.replace(' ', 'T')}Z` : text;
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return text;
+
+  return beijingTimeFormatter.format(date).replaceAll('/', '-');
 }
 
 function updateSummary() {
