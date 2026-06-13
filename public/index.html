@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personal Mock API</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <h1>Personal Mock API</h1>
+          <p>本地轻量 Mock / Proxy 工具</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="summary">
+            <span><strong id="summary-routes">0</strong> 接口</span>
+            <span><strong id="summary-categories">0</strong> 分类</span>
+          </div>
+          <button id="new-route" class="primary">新增接口</button>
+        </div>
+      </section>
+
+      <section class="layout">
+        <aside class="panel list-panel">
+          <div class="panel-head">
+            <h2>接口列表</h2>
+            <div class="actions">
+              <button id="new-category" title="新增分类">新增分类</button>
+              <button id="refresh-routes" title="刷新接口">刷新</button>
+            </div>
+          </div>
+          <div class="category-tools">
+            <select id="category-tools-select" title="选择分类"></select>
+            <div class="actions">
+              <button id="rename-category" title="重命名分类">重命名</button>
+              <button id="delete-category" title="删除分类">删除</button>
+            </div>
+          </div>
+          <div id="route-list" class="route-list"></div>
+        </aside>
+
+        <section class="panel editor-panel">
+          <div class="panel-head">
+            <h2>接口配置</h2>
+            <div class="actions">
+              <button id="delete-route">删除</button>
+              <button id="save-route" class="primary">保存</button>
+            </div>
+          </div>
+
+          <form id="route-form" class="form">
+            <label>
+              名称
+              <input name="name" placeholder="接口名称" />
+            </label>
+
+            <label>
+              分类
+              <select name="category_id"></select>
+            </label>
+
+            <div class="grid">
+              <label>
+                方法
+                <select name="method">
+                  <option>GET</option>
+                  <option>POST</option>
+                  <option>PUT</option>
+                  <option>PATCH</option>
+                  <option>DELETE</option>
+                </select>
+              </label>
+              <label>
+                路径
+                <input name="path" placeholder="/hello" />
+              </label>
+            </div>
+
+            <label>
+              匹配规则
+              <textarea name="match_rules" class="match-rules" spellcheck="false"></textarea>
+            </label>
+            <p class="hint">同 URL 多接口时使用。JSON 字段示例：body.type equals createUser；SOAP 示例：rawBody contains &lt;queryUser。</p>
+
+            <div class="grid">
+              <label>
+                模式
+                <select name="mode">
+                  <option value="mock">Mock</option>
+                  <option value="proxy">Proxy</option>
+                </select>
+              </label>
+              <label>
+                状态码
+                <input name="status" type="number" min="100" max="599" />
+              </label>
+              <label>
+                延迟(ms)
+                <input name="delay_ms" type="number" min="0" max="60000" />
+              </label>
+            </div>
+
+            <label class="checkbox">
+              <input name="enabled" type="checkbox" />
+              启用接口
+            </label>
+
+            <label>
+              代理地址
+              <input name="proxy_url" placeholder="https://api.example.com/path" />
+            </label>
+
+            <label>
+              Mock 响应
+              <textarea name="response_body" spellcheck="false"></textarea>
+            </label>
+
+            <p class="hint">可用变量：{{uuid}}、{{timestamp}}、{{now}}、{{randomInt(1,100)}}、{{query.page}}、{{body.name}}</p>
+            <p id="endpoint" class="endpoint"></p>
+          </form>
+        </section>
+
+        <aside class="panel logs-panel">
+          <div class="panel-head">
+            <h2>请求日志</h2>
+            <div class="actions">
+              <button id="clear-logs">清空</button>
+              <button id="refresh-logs">刷新</button>
+            </div>
+          </div>
+          <div id="log-list" class="log-list"></div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-name: 构建mock-api并部署到阿里云服务器
+name: 构建并部署 mock-api
 
 on:
   push:
@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: 拉取代码
         uses: actions/checkout@v4
@@ -19,36 +20,34 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: npm
 
-      - name: 安装依赖 & 打包
+      - name: 安装依赖并构建
         run: |
           npm ci
           npm run build
-          echo '{"version":"${{ github.sha }}","buildTime":"'$(TZ=Asia/Shanghai date +"%Y-%m-%d %H:%M:%S")'"}'  > dist/version.json
+          echo '{"version":"${{ github.sha }}","buildTime":"'$(TZ=Asia/Shanghai date +"%Y-%m-%d %H:%M:%S")'"}' > dist/version.json
 
-      - name: 安裃 sshpass
-        run: sudo apt-get install -y sshpass
+      - name: 安装 sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: 上传文件到阿里云
+      - name: 上传文件到服务器
         run: |
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -r -P 22 -o StrictHostKeyChecking=no dist/. ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/mock-api/
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -p 22 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p ~/mock-api && rm -rf ~/mock-api/dist ~/mock-api/public ~/mock-api/index.js ~/mock-api/routes"
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P 22 -o StrictHostKeyChecking=no package.json package-lock.json ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/mock-api/
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -r -P 22 -o StrictHostKeyChecking=no dist public ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/mock-api/
 
-      - name: 安装依赖（依赖变化时）& 重启服务
+      - name: 安装依赖并重启服务
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
+            set -e
             cd ~/mock-api
-            NEW_HASH=$(md5sum package-lock.json | awk '{print $1}')
-            OLD_HASH=$(cat .lock_hash 2>/dev/null || echo "")
-            if [ "$NEW_HASH" != "$OLD_HASH" ]; then
-              echo "依赖有变化，重新安装..."
-              npm ci --omit=dev
-              echo "$NEW_HASH" > .lock_hash
-            else
-              echo "依赖无变化，跳过安装"
-            fi
-            pm2 restart mock-api || pm2 start index.js --name mock-api
+            node -v
+            npm ci --omit=dev
+            pm2 delete mock-api || true
+            PORT=13000 pm2 start dist/server.js --name mock-api
+            pm2 save
